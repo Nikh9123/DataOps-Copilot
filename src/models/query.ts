@@ -1,0 +1,7 @@
+export type QueryExecutionResult = {
+  columns: string[];
+  rows: Array<Record<string, unknown>>;
+  rowCount: number;
+  executionTimeMs?: number;
+  raw?: unknown;
+};

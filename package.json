@@ -1,0 +1,111 @@
+{
+  "name": "dataops-copilot",
+  "displayName": "DataOps Copilot",
+  "description": "Manage data platform connections and run Snowflake SQL directly from VS Code.",
+  "version": "0.0.1",
+  "publisher": "local-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:dataops.addConnection",
+    "onCommand:dataops.switchConnection",
+    "onCommand:dataops.runQuery",
+    "onCommand:dataops.previewTableFromTree",
+    "onView:dataops.connectionsView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dataops.addConnection",
+        "title": "DataOps: Add Connection",
+        "category": "DataOps"
+      },
+      {
+        "command": "dataops.switchConnection",
+        "title": "DataOps: Switch Active Connection",
+        "category": "DataOps"
+      },
+      {
+        "command": "dataops.runQuery",
+        "title": "DataOps: Run Active SQL Query",
+        "category": "DataOps"
+      },
+      {
+        "command": "dataops.refreshConnections",
+        "title": "DataOps: Refresh Connections",
+        "category": "DataOps"
+      },
+      {
+        "command": "dataops.previewTableFromTree",
+        "title": "DataOps: Preview Table",
+        "category": "DataOps"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dataops",
+          "title": "DataOps Copilot",
+          "icon": "resources/dataops.svg"
+        }
+      ]
+    },
+    "views": {
+      "dataops": [
+        {
+          "id": "dataops.connectionsView",
+          "name": "Connections"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "dataops.addConnection",
+          "when": "view == dataops.connectionsView",
+          "group": "navigation"
+        },
+        {
+          "command": "dataops.refreshConnections",
+          "when": "view == dataops.connectionsView",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext .ts",
+    "pretest": "npm run compile && npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "snowflake",
+    "databricks",
+    "dataops",
+    "sql"
+  ],
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "snowflake-sdk": "^2.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/vscode": "^1.110.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
+    "eslint": "^10.1.0",
+    "typescript": "^5.9.3"
+  }
+}
