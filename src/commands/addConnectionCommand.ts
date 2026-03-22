@@ -12,7 +12,8 @@ export function registerAddConnectionCommand(
     const selectedType = await vscode.window.showQuickPick(
       [
         { label: "Snowflake", value: "snowflake" as DataPlatformType },
-        { label: "Databricks", value: "databricks" as DataPlatformType }
+        { label: "Databricks", value: "databricks" as DataPlatformType },
+        { label: "Airflow", value: "airflow" as DataPlatformType }
       ],
       {
         placeHolder: "Select a platform"
@@ -35,6 +36,8 @@ export function registerAddConnectionCommand(
       prompt:
         selectedType.value === "databricks"
           ? "Workspace URL or host (e.g. adb-1234567890123456.7.azuredatabricks.net)"
+          : selectedType.value === "airflow"
+            ? "Airflow URL or host (e.g. http://localhost:8080)"
           : "Account URL or host (e.g. xy12345.us-east-1.snowflakecomputing.com)",
       validateInput: (value) => (value.trim() ? undefined : "Account is required")
     });
@@ -42,13 +45,52 @@ export function registerAddConnectionCommand(
       return;
     }
 
-    const username = await vscode.window.showInputBox({
-      prompt: selectedType.value === "databricks" ? "Username or email" : "Username",
-      validateInput: (value) => (value.trim() ? undefined : "Username is required")
+    let airflowAuthType: "basic" | "token" | undefined;
+    if (selectedType.value === "airflow") {
+      const selectedAuth = await vscode.window.showQuickPick(
+        [
+          { label: "Basic Auth (username/password)", value: "basic" as const },
+          { label: "Bearer Token", value: "token" as const }
+        ],
+        {
+          placeHolder: "Select Airflow authentication method"
+        }
+      );
+
+      if (!selectedAuth) {
+        return;
+      }
+
+      airflowAuthType = selectedAuth.value;
+    }
+
+    const usernamePrompt =
+      selectedType.value === "databricks"
+        ? "Username or email"
+        : selectedType.value === "airflow"
+          ? airflowAuthType === "token"
+            ? "Username (optional for token auth)"
+            : "Username"
+          : "Username";
+
+    const usernameValidation = (value: string): string | undefined => {
+      if (selectedType.value === "airflow" && airflowAuthType === "token") {
+        return undefined;
+      }
+
+      return value.trim() ? undefined : "Username is required";
+    };
+
+    const usernameInput = await vscode.window.showInputBox({
+      prompt: usernamePrompt,
+      validateInput: usernameValidation
     });
-    if (!username) {
+
+    if (usernameInput === undefined) {
       return;
     }
+
+    const username = usernameInput.trim() || "token-user";
 
     const warehouseId =
       selectedType.value === "databricks"
@@ -58,8 +100,15 @@ export function registerAddConnectionCommand(
           })
         : undefined;
 
+    const credentialPrompt =
+      selectedType.value === "databricks"
+        ? "Personal access token"
+        : selectedType.value === "airflow" && airflowAuthType === "token"
+          ? "Bearer token"
+          : "Password";
+
     const credential = await vscode.window.showInputBox({
-      prompt: selectedType.value === "databricks" ? "Personal access token" : "Password",
+      prompt: credentialPrompt,
       password: true,
       validateInput: (value) => (value.trim() ? undefined : "A credential value is required")
     });
@@ -75,13 +124,14 @@ export function registerAddConnectionCommand(
       config: {
         account: account.trim(),
         username: username.trim(),
-        warehouseId: warehouseId?.trim() || undefined
+        warehouseId: warehouseId?.trim() || undefined,
+        airflowAuthType
       }
     };
 
     await secretStorageService.saveConnection(
       id,
-      selectedType.value === "databricks"
+      selectedType.value === "databricks" || (selectedType.value === "airflow" && airflowAuthType === "token")
         ? {
             accessToken: credential.trim()
           }

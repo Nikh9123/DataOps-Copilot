@@ -6,13 +6,17 @@ import { registerOptimizeQueryCommand } from "./commands/optimizeQueryCommand";
 import { registerPredictQueryCostCommand } from "./commands/predictQueryCostCommand";
 import { registerRemoveConnectionCommand } from "./commands/removeConnectionCommand";
 import { registerRunQueryCommand } from "./commands/runQueryCommand";
+import { registerShowAirflowDagDetailsCommand } from "./commands/showAirflowDagDetailsCommand";
 import { registerShowDatabricksDetailsCommand } from "./commands/showDatabricksDetailsCommand";
 import { registerSwitchConnectionCommand } from "./commands/switchConnectionCommand";
+import { registerTriggerDAGCommand } from "./commands/triggerDAGCommand";
 import { registerHistoryCommands } from "./commands/queryHistoryCommand";
+import { AirflowTreeProvider } from "./providers/airflowTreeProvider";
 import { Connection } from "./models/connection";
 import { ConnectionsTreeDataProvider } from "./providers/connectionsTreeDataProvider";
 import { DatabricksTreeProvider } from "./providers/databricksTreeProvider";
 import { HistoryTreeDataProvider } from "./providers/historyTreeProvider";
+import { AirflowService } from "./services/airflowService";
 import { ConnectionManager } from "./services/connectionManager";
 import { SecretStorageService } from "./services/secretStorageService";
 import { SnowflakeService } from "./services/snowflakeService";
@@ -27,6 +31,7 @@ import { DatabricksWarehouseService } from "./services/databricksWarehouseServic
 import { DatabricksQueryHistoryService } from "./services/databricksQueryHistoryService";
 import { DatabricksMetadataService } from "./services/databricksMetadataService";
 import { DatabricksSqlService } from "./services/databricksSqlService";
+import { GeminiAirflowAdvisorService } from "./services/geminiAirflowAdvisor";
 import { GeminiAdvisorService } from "./services/geminiAdvisorService";
 import { QueryCostAnalyzer } from "./services/queryCostAnalyzer";
 
@@ -40,6 +45,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const databricksQueryHistoryService = new DatabricksQueryHistoryService();
   const databricksMetadataService = new DatabricksMetadataService();
   const databricksSqlService = new DatabricksSqlService();
+  const airflowService = new AirflowService();
   const queryHistoryService = new QueryHistoryService(context.globalState);
   const queryCostAnalyzer = new QueryCostAnalyzer();
 
@@ -47,6 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   let aiQueryGeneratorService: AiQueryGeneratorService | undefined;
   let aiCostEstimatorService: AiCostEstimatorService | undefined;
   let geminiAdvisorService: GeminiAdvisorService | undefined;
+  let geminiAirflowAdvisorService: GeminiAirflowAdvisorService | undefined;
 
   try {
     const aiProvider = AiProviderFactory.fromEnvironment();
@@ -54,6 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     aiQueryGeneratorService = new AiQueryGeneratorService(aiProvider);
     aiCostEstimatorService = new AiCostEstimatorService(aiProvider);
     geminiAdvisorService = new GeminiAdvisorService(aiProvider);
+    geminiAirflowAdvisorService = new GeminiAirflowAdvisorService(aiProvider);
   } catch {
     // AI commands will be registered with setup hints when env vars are missing.
   }
@@ -92,11 +100,37 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     },
     () => treeProvider.refresh()
   );
+  const airflowTreeProvider = new AirflowTreeProvider(
+    airflowService,
+    async (connectionId) => {
+      const baseConnection = connectionManager.getConnectionById(connectionId);
+      if (!baseConnection || baseConnection.type !== "airflow") {
+        throw new Error("Airflow connection not found.");
+      }
+
+      return secretStorageService.getConnection(connectionId).then((secret) => {
+        if (!secret?.accessToken && !secret?.password) {
+          throw new Error("Credentials not found for the selected connection.");
+        }
+
+        return {
+          ...baseConnection,
+          config: {
+            ...baseConnection.config,
+            accessToken: secret.accessToken,
+            password: secret.password
+          }
+        };
+      });
+    },
+    () => treeProvider.refresh()
+  );
   const treeProvider = new ConnectionsTreeDataProvider(
     connectionManager,
     secretStorageService,
     snowflakeService,
-    databricksTreeProvider
+    databricksTreeProvider,
+    airflowTreeProvider
   );
   const historyProvider = new HistoryTreeDataProvider(queryHistoryService);
 
@@ -110,7 +144,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     historyViewDisposable,
     queryHistoryService,
     treeProvider,
-    databricksTreeProvider
+    databricksTreeProvider,
+    airflowTreeProvider
   );
 
   const refreshUi = () => {
@@ -118,7 +153,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     const active = connectionManager.getActiveConnection();
     const platform =
-      active?.type === "snowflake" ? "Snowflake" : active?.type === "databricks" ? "Databricks" : undefined;
+      active?.type === "snowflake"
+        ? "Snowflake"
+        : active?.type === "databricks"
+          ? "Databricks"
+          : active?.type === "airflow"
+            ? "Airflow"
+            : undefined;
 
     statusBarItem.text = active
       ? `$(pass-filled) ${platform ?? active.type}: ${active.name}`
@@ -177,6 +218,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       databricksClusterService,
       geminiAdvisorService
     ),
+    registerShowAirflowDagDetailsCommand(
+      connectionManager,
+      secretStorageService,
+      airflowService,
+      geminiAirflowAdvisorService
+    ),
+    registerTriggerDAGCommand(connectionManager, secretStorageService, airflowService),
     registerOptimizeQueryCommand(
       aiOptimizerService ??
         new AiOptimizerService({
@@ -208,6 +256,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand("dataops.refreshDatabricksServices", () => {
       databricksTreeProvider.clearCaches();
+      treeProvider.refresh();
+      refreshUi();
+    }),
+    vscode.commands.registerCommand("dataops.refreshAirflow", () => {
+      airflowTreeProvider.clearCaches();
       treeProvider.refresh();
       refreshUi();
     })

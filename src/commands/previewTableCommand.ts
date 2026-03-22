@@ -43,6 +43,11 @@ export function registerPreviewTableCommand(
         return;
       }
 
+      if (baseConnection.type === "airflow") {
+        vscode.window.showErrorMessage("Table preview is not supported for Airflow connections.");
+        return;
+      }
+
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,

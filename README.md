@@ -1,155 +1,247 @@
-# DataOps Copilot
+# 🚀 DataOps Copilot
 
-DataOps Copilot is a production-oriented VS Code extension for Snowflake development. It combines connection management, schema exploration, query execution, result visualization, AI-assisted SQL tooling, and pre-execution cost prediction in a single workflow inside the editor.
+> AI-powered DataOps Control Center for VS Code.
 
-## Overview
+![Version](https://img.shields.io/badge/version-0.0.1-1f6feb)
+![VS Code](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visualstudiocode&logoColor=white)
+![Build](https://img.shields.io/badge/build-passing-2ea043)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-8250df)
 
-DataOps Copilot is designed for data engineers and analytics engineers who want to:
+DataOps Copilot brings Snowflake, Databricks, and Airflow into one operational cockpit inside VS Code, then layers Gemini intelligence on top for optimization, observability, and decision support.
 
-- Manage Snowflake connections directly from VS Code
-- Browse databases, schemas, and tables from a sidebar
-- Preview tables with one click
-- Run SQL from the active editor
-- Review query history
-- Generate SQL from natural language with AI
-- Optimize SQL with AI suggestions and replace-in-editor flow
-- Predict query cost before execution using rule-based and AI-assisted analysis
+---
 
-## Features
+## 🖼️ Hero Section
 
-### Connection Management
+Data teams do not need another isolated query runner. They need one control surface for execution, monitoring, orchestration, and AI-guided improvements.
 
-- Multi-connection Snowflake support
-- Switch active connection from command palette or status bar
-- Remove saved connections
-- Secure credential storage through VS Code SecretStorage
-- Persisted connection metadata through VS Code global state
+DataOps Copilot is built for that exact workflow.
 
-### Schema Explorer
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  DataOps Copilot                                             │
+│  Snowflake • Databricks • Airflow • Gemini                  │
+│                                                              │
+│  Execute SQL • Monitor Resources • Trigger DAGs • Optimize  │
+└──────────────────────────────────────────────────────────────┘
+```
 
-- Sidebar tree view for:
-   - Databases
-   - Schemas
-   - Tables
-- Lazy loading of metadata
-- Loading and error states in the tree
-- One-click table preview
+> 💡 Tip
+> Add one connection per platform and switch context from the status bar for a smooth multi-platform workflow.
 
-### Query Execution
+---
 
-- Run SQL from the active editor or current selection
-- Keyboard shortcut for fast execution
-- Results shown in a rich webview
-- Query execution history stored locally
-- Query results logged to the DataOps output channel
+## 🧠 What is DataOps Copilot?
 
-### Query Preview and Result UI
+DataOps Copilot is a production-grade VS Code extension designed for engineers who operate data platforms, not just write SQL.
 
-- Auto-preview on table click
-- Sticky table headers
-- Scrollable result grid
-- Client-side column sorting
-- Click-to-copy cell values
-- Export results to CSV
-- Query metrics panel with:
-   - Query type
-   - Execution time
-   - Row count
-   - Cost badge
-   - Scan size badge
-   - Warning banners
+It solves three common pain points:
+
+- Tool fragmentation across Snowflake, Databricks, and Airflow.
+- Lack of proactive insight before query/resource mistakes happen.
+- Slow context switching between execution and observability.
+
+Unlike standard platform-specific extensions, DataOps Copilot combines:
+
+- Multi-platform control in one sidebar.
+- AI-guided optimization and advisories.
+- Operational actions (for example: trigger Airflow DAG runs) directly from context.
+
+---
+
+## ✨ Features
 
 ### AI SQL Intelligence
 
-- AI Query Optimizer
-   - Analyzes SQL for performance issues
-   - Suggests improvements
-   - Generates optimized SQL
-   - Replace Query button updates editor content directly
-- AI Query Generator
-   - Converts natural language prompts into Snowflake SQL
-   - Uses schema and column context when available
-   - Inserts generated SQL into the current editor or opens a new SQL document
+- AI Query Optimizer with actionable rewrites and replace-in-editor flow.
+- AI Query Generator to convert natural language into SQL.
+- Query Cost Predictor with rule-based analysis and optional AI augmentation.
+- Structured output for issues, suggestions, and recommendations.
 
-### Query Cost Predictor
+### Snowflake Integration
 
-- Rule-based cost analysis before execution
-- Optional AI-enhanced cost estimation
-- Detects common cost/performance risks such as:
-   - `SELECT *`
-   - Missing `WHERE`
-   - Missing `LIMIT`
-   - Multiple `JOIN`s
-   - Large known tables via environment hints
-- Shows pre-run warning modal for risky queries
-- Allows users to cancel execution before running high-cost SQL
+- Secure connection management.
+- Metadata explorer: databases, schemas, tables.
+- SQL execution from active editor.
+- Table preview with rich result webview.
+- Query history integration.
 
-### Productivity and UX
+### Databricks Control Center
 
-- Active connection shown in status bar
-- Editor toolbar commands for SQL workflows
-- Command palette integration for all major actions
-- Progress notifications for query execution, preview, AI tasks, and cost analysis
-- Query History view with reopen and rerun actions
+- Monitor clusters (state, workers, autoscale).
+- Monitor jobs and run outcomes.
+- Monitor SQL warehouses.
+- Browse query history.
+- Explore Unity Catalog metadata (catalogs, schemas, tables).
+- Execute SQL statements with warehouse resolution.
+- AI-backed resource advisor in details panel.
 
-## Commands
+### Airflow Integration
 
-- `DataOps: Add Connection` (`dataops.addConnection`)
-- `DataOps: Remove Connection` (`dataops.removeConnection`)
-- `DataOps: Switch Active Connection` (`dataops.switchConnection`)
-- `DataOps: Run Active SQL Query` (`dataops.runQuery`)
-- `DataOps: Preview Table` (`dataops.previewTable`)
-- `DataOps: Predict Query Cost` (`dataops.predictQueryCost`)
-- `DataOps: Optimize Query` (`dataops.optimizeQuery`)
-- `DataOps: Generate SQL` (`dataops.generateQuery`)
-- `DataOps: Refresh Connections` (`dataops.refreshConnections`)
-- `DataOps: Clear Query History` (`dataops.clearHistory`)
-- `Open in Editor` (`dataops.openHistoryItem`)
-- `Re-run Query` (`dataops.rerunHistoryItem`)
+- DAG monitoring with lazy loading.
+- DAG run history.
+- Task instance tracking (state, tries, duration).
+- Trigger DAG execution directly from tree/context.
+- DAG details panel with AI pipeline advisor.
+- Auto-refresh for near-real-time DAG health updates.
 
-## Keyboard Shortcuts
+### Multi-platform Explorer
 
-- `Ctrl+Enter` runs the active SQL query
-- `Ctrl+Alt+P` predicts query cost
-- `Ctrl+Alt+O` optimizes the current query
-- `Ctrl+Alt+G` generates SQL from natural language
+- One Connections view for Snowflake, Databricks, and Airflow.
+- Global refresh and platform-specific refresh actions.
+- Active connection indicator in status bar.
+- Smooth command-palette driven workflows.
 
-## Technology Stack
+> 🔍 Highlight
+> DataOps Copilot is an intelligence-first extension: it does not only execute commands, it helps you choose better actions before you run them.
 
-### Core Extension Stack
+---
 
-- TypeScript
-- VS Code Extension API
-- CommonJS output for VS Code runtime
+## ⚔️ Comparison: Why It Wins
 
-### Data Platform Integration
+| Feature | Snowflake VS Code Extension | Databricks VS Code Extension | DataOps Copilot |
+| --- | --- | --- | --- |
+| Snowflake SQL execution | ✅ | ❌ | ✅ |
+| Databricks SQL execution | ❌ | ✅ | ✅ |
+| Airflow DAG monitoring + trigger | ❌ | ❌ | ✅ |
+| Cross-platform connections in one view | ❌ | ❌ | ✅ |
+| AI query optimization | Limited/No | Limited/No | ✅ |
+| AI cost prediction | ❌ | ❌ | ✅ |
+| AI resource advisor | ❌ | Limited | ✅ |
+| Unified operational observability | ❌ | Partial | ✅ |
+| Control-center style workflow | ❌ | ❌ | ✅ |
 
-- `snowflake-sdk` for Snowflake connectivity and query execution
+---
 
-### AI Integration
+## 🧠 Why This Project is Different (USP)
 
-- `@google/genai` for Gemini integration
-- `axios` for OpenAI-compatible chat completions
-- Pluggable AI provider design for Gemini and OpenAI
+### 1. Intelligence over pure execution
 
-### Configuration and Storage
+Most tools stop at "run command". DataOps Copilot adds analysis before and after execution.
 
-- `dotenv` for local `.env` configuration
-- VS Code SecretStorage for secrets
-- VS Code global state for metadata and query history
+### 2. AI-driven insights built into operations
 
-### Tooling
+Optimization, risk prediction, and advisory outcomes are part of the normal workflow, not an afterthought.
 
-- TypeScript compiler
-- ESLint
+### 3. Observability + optimization in one loop
 
-## Configuration
+You can inspect platform health, run workload actions, and apply AI recommendations without leaving VS Code.
 
-### AI Provider Configuration
+---
 
-Create a local `.env` file in the project root.
+## 🏗️ Architecture Diagram
 
-Example Gemini setup:
+```mermaid
+graph TD
+  U[Developer in VS Code] --> V[DataOps Copilot Extension]
+  V --> C[Connection Manager]
+  V --> P[Providers and Commands]
+  P --> S1[Snowflake Service]
+  P --> S2[Databricks Services]
+  P --> S3[Airflow Service]
+  P --> AI[Gemini AI Services]
+  S1 --> Snowflake[(Snowflake)]
+  S2 --> Databricks[(Databricks API and SQL)]
+  S3 --> Airflow[(Airflow REST API)]
+  AI --> Gemini[(Gemini)]
+```
+
+---
+
+## 🔄 Data Flow Diagram
+
+```mermaid
+flowchart LR
+  A[User Action] --> B[Query or Resource Request]
+  B --> C[AI Analysis: Optimize or Predict]
+  C --> D[Execution Engine]
+  D --> E[Platform Response]
+  E --> F[Webview Insights and History]
+
+  D --> D1[Snowflake]
+  D --> D2[Databricks]
+  D --> D3[Airflow Trigger or Monitoring]
+```
+
+---
+
+## 📂 Project Structure
+
+```text
+src/
+  commands/
+    addConnectionCommand.ts
+    runQueryCommand.ts
+    triggerDAGCommand.ts
+    showAirflowDagDetailsCommand.ts
+    showDatabricksDetailsCommand.ts
+  providers/
+    connectionsTreeDataProvider.ts
+    databricksTreeProvider.ts
+    airflowTreeProvider.ts
+    historyTreeProvider.ts
+  services/
+    snowflakeService.ts
+    databricksApiClient.ts
+    databricksSqlService.ts
+    databricksClusterService.ts
+    databricksJobsService.ts
+    databricksWarehouseService.ts
+    databricksMetadataService.ts
+    databricksQueryHistoryService.ts
+    airflowService.ts
+    aiProvider.ts
+    aiOptimizerService.ts
+    aiQueryGeneratorService.ts
+    aiCostEstimatorService.ts
+    geminiAdvisorService.ts
+    geminiAirflowAdvisor.ts
+  utils/
+    webviewTableRenderer.ts
+    airflowDagDetailsWebview.ts
+    databricksDetailsWebview.ts
+  models/
+  extension.ts
+resources/
+  dataops.svg
+```
+
+---
+
+## ⚙️ Installation and Setup
+
+### 1. Clone
+
+```bash
+git clone https://github.com/Nikh9123/DataOps-Copilot.git
+cd DataOps-Copilot
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Build
+
+```bash
+npm run compile
+```
+
+### 4. Launch extension host
+
+- Open the project in VS Code.
+- Press F5.
+
+---
+
+## 🔑 Configuration
+
+Create a local `.env` file in project root.
+
+### AI Provider
 
 ```env
 DATAOPS_AI_PROVIDER=gemini
@@ -157,7 +249,7 @@ DATAOPS_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 DATAOPS_GEMINI_MODEL=gemini-3-flash-preview
 ```
 
-Example OpenAI setup:
+Or:
 
 ```env
 DATAOPS_AI_PROVIDER=openai
@@ -165,61 +257,144 @@ DATAOPS_OPENAI_API_KEY=YOUR_OPENAI_API_KEY
 DATAOPS_OPENAI_MODEL=gpt-4o-mini
 ```
 
-Optional large-table hints for cost prediction:
+### Optional Cost Hints
 
 ```env
 DATAOPS_LARGE_TABLES=FACT_ORDERS,EVENTS,RAW_CLICKSTREAM
 ```
 
-## Views
+### Runtime Connection Inputs (in command flow)
 
-The extension contributes a DataOps activity bar container with:
+- Snowflake: account, username, password.
+- Databricks: workspace host, username, PAT, optional warehouse ID.
+- Airflow: host/url, auth mode (basic or bearer), credentials.
 
-- `Connections` view
-- `Query History` view
+---
 
-## Development
+## 🚀 Usage Guide
 
-1. Install dependencies:
+### Run SQL
 
-```bash
-npm install
-```
+1. Set active connection to Snowflake or Databricks.
+2. Open a `.sql` file.
+3. Execute `DataOps: Run Active SQL Query` or press Ctrl+Enter.
 
-2. Compile the extension:
+### Optimize SQL
+
+1. Select or open SQL text.
+2. Run `DataOps: Optimize Query`.
+3. Review suggestions and replace query when needed.
+
+### Predict Cost
+
+1. Open SQL query.
+2. Run `DataOps: Predict Query Cost`.
+3. Inspect cost level, risks, and recommendations.
+
+### Monitor Databricks Resources
+
+1. Expand Databricks connection in Connections view.
+2. Open Clusters, Jobs, Warehouses, Query History, Catalogs.
+3. Click resource nodes for detailed insight panels.
+
+### Trigger Airflow DAG
+
+1. Expand Airflow connection.
+2. Open DAG node context menu.
+3. Run `DataOps: Trigger DAG` and confirm.
+
+---
+
+## 🧠 AI Features Explained
+
+### Query Optimizer
+
+- Detects inefficient SQL patterns.
+- Suggests safer and faster alternatives.
+- Supports direct replace in editor.
+
+### Cost Predictor
+
+- Combines heuristics and optional AI scoring.
+- Flags high-risk patterns such as broad scans and unbounded queries.
+
+### Resource Advisor
+
+- Databricks advisor analyzes cluster/job/warehouse signals.
+- Returns concise issues and optimization recommendations.
+
+### Pipeline Advisor
+
+- Airflow advisor analyzes DAG schedule, runs, and task behavior.
+- Surfaces bottlenecks, reliability concerns, and practical next steps.
+
+---
+
+## 📸 Screenshots
+
+![Connections Explorer](./assets/connections-explorer.png)
+![Query Optimizer](./assets/query-optimizer.png)
+![Databricks Details](./assets/databricks-details.png)
+![Airflow DAG Details](./assets/airflow-dag-details.png)
+![Query Results](./assets/query-results.png)
+
+> 📌 Note
+> Add actual screenshots to the `assets` folder using the same filenames for instant rendering on GitHub.
+
+---
+
+## 🛠️ Tech Stack
+
+- TypeScript
+- VS Code Extension API
+- Snowflake SDK (`snowflake-sdk`)
+- Databricks REST and SQL Statement APIs
+- Apache Airflow REST API (`/api/v1`)
+- Gemini / OpenAI provider abstraction
+- Axios and dotenv
+
+---
+
+## 🔮 Future Enhancements
+
+- Data lineage graph and dependency explorer.
+- Unified cost dashboard across platforms.
+- Auto-fix SQL mode with confidence scoring.
+- Policy-aware governance checks before execution.
+- Expanded observability timelines for runs/jobs/tasks.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit with clear messages.
+4. Open a pull request with context and screenshots if UI changes are included.
+
+Suggested local checks:
 
 ```bash
 npm run compile
-```
-
-3. Lint the codebase:
-
-```bash
 npm run lint
 ```
 
-4. Launch the Extension Development Host:
+---
 
-- Open this folder in VS Code
-- Press `F5`
+## 📜 License
 
-## Typical Workflow
+MIT License.
 
-1. Add a Snowflake connection
-2. Switch the active connection if needed
-3. Browse databases, schemas, and tables in the sidebar
-4. Click a table to preview data
-5. Write or paste SQL in a `.sql` file
-6. Predict cost before execution if needed
-7. Run the query
-8. Review results in the webview
-9. Optimize the query or generate a new one with AI
-10. Reopen or rerun previous work from Query History
+---
 
-## Notes
+## ⭐ Support This Project
 
-- Credentials are stored in VS Code SecretStorage and are not written to source control.
-- Connection metadata and query history are stored in VS Code global state.
-- Local `.env` files are ignored by git.
-- Query output and failures are also written to the `DataOps Copilot` output channel.
-- AI-powered features degrade gracefully when provider credentials are not configured.
+If DataOps Copilot helps your team ship better data workflows:
+
+- Star the repository.
+- Share it with your data engineering team.
+- Open issues for feature requests and platform integrations.
+
+Built to make DataOps faster, smarter, and more reliable from inside your editor.

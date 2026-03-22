@@ -20,7 +20,10 @@
     "onCommand:dataops.optimizeQuery",
     "onCommand:dataops.generateQuery",
     "onCommand:dataops.showDatabricksDetails",
+    "onCommand:dataops.showAirflowDagDetails",
+    "onCommand:dataops.triggerDAG",
     "onCommand:dataops.refreshDatabricksServices",
+    "onCommand:dataops.refreshAirflow",
     "onCommand:dataops.previewTable",
     "onCommand:dataops.openHistoryItem",
     "onCommand:dataops.rerunHistoryItem",
@@ -72,8 +75,23 @@
         "category": "DataOps"
       },
       {
+        "command": "dataops.showAirflowDagDetails",
+        "title": "DataOps: Show Airflow DAG Details",
+        "category": "DataOps"
+      },
+      {
+        "command": "dataops.triggerDAG",
+        "title": "DataOps: Trigger DAG",
+        "category": "DataOps"
+      },
+      {
         "command": "dataops.refreshDatabricksServices",
         "title": "DataOps: Refresh Databricks Services",
+        "category": "DataOps"
+      },
+      {
+        "command": "dataops.refreshAirflow",
+        "title": "DataOps: Refresh Airflow",
         "category": "DataOps"
       },
       {
@@ -167,6 +185,11 @@
           "group": "navigation"
         },
         {
+          "command": "dataops.refreshAirflow",
+          "when": "view == dataops.connectionsView",
+          "group": "navigation"
+        },
+        {
           "command": "dataops.clearHistory",
           "when": "view == dataops.historyView",
           "group": "navigation"
@@ -197,6 +220,16 @@
           "command": "dataops.generateQuery",
           "when": "view == dataops.connectionsView && viewItem == dataops.table",
           "group": "inline@3"
+        },
+        {
+          "command": "dataops.showAirflowDagDetails",
+          "when": "view == dataops.connectionsView && viewItem == dataops.airflowDag",
+          "group": "inline@1"
+        },
+        {
+          "command": "dataops.triggerDAG",
+          "when": "view == dataops.connectionsView && viewItem == dataops.airflowDag",
+          "group": "inline@2"
         }
       ]
     },

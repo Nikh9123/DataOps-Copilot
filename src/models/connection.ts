@@ -1,4 +1,4 @@
-export type DataPlatformType = "snowflake" | "databricks";
+export type DataPlatformType = "snowflake" | "databricks" | "airflow";
 
 export type Connection = {
   id: string;
@@ -8,6 +8,7 @@ export type Connection = {
     account: string;
     username: string;
     warehouseId?: string;
+    airflowAuthType?: "basic" | "token";
     password?: string;
     accessToken?: string;
   };
@@ -18,6 +19,7 @@ export type StoredConnectionMetadata = Omit<Connection, "config"> & {
     account: string;
     username: string;
     warehouseId?: string;
+    airflowAuthType?: "basic" | "token";
   };
 };
 

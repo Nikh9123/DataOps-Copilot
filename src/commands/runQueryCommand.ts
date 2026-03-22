@@ -34,6 +34,11 @@ export function registerRunQueryCommand(
       return;
     }
 
+    if (activeConnection.type === "airflow") {
+      vscode.window.showErrorMessage("Run Query is not supported for Airflow connections.");
+      return;
+    }
+
     const sql = getSqlFromActiveEditor();
     if (!sql) {
       vscode.window.showErrorMessage("Query is empty. Select SQL text or add SQL to the current editor.");

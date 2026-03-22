@@ -4,6 +4,7 @@ import { Connection } from "../models/connection";
 import { SecretStorageService } from "../services/secretStorageService";
 import { SnowflakeService } from "../services/snowflakeService";
 import { DatabricksTreeProvider, DatabricksNodePayload, DatabricksNodeType } from "./databricksTreeProvider";
+import { AirflowNodePayload, AirflowNodeType, AirflowTreeProvider } from "./airflowTreeProvider";
 import { getConnectionWithCredentials } from "../utils/connectionCredentials";
 
 type ConnectionNodeType =
@@ -15,6 +16,7 @@ type ConnectionNodeType =
   | "tablesRoot"
   | "table"
   | DatabricksNodeType
+  | AirflowNodeType
   | "loading"
   | "info"
   | "error";
@@ -35,9 +37,13 @@ type NodePayload = {
   schema?: string;
   table?: string;
   cluster?: DatabricksNodePayload["cluster"];
-  run?: DatabricksNodePayload["run"];
+  run?: DatabricksNodePayload["run"] | AirflowNodePayload["run"];
   warehouse?: DatabricksNodePayload["warehouse"];
   queryHistory?: DatabricksNodePayload["queryHistory"];
+  dagId?: string;
+  runId?: string;
+  dag?: AirflowNodePayload["dag"];
+  task?: AirflowNodePayload["task"];
 };
 
 export class ConnectionTreeItem extends vscode.TreeItem {
@@ -66,13 +72,15 @@ export class ConnectionsTreeDataProvider implements vscode.TreeDataProvider<Conn
     private readonly connectionManager: ConnectionManager,
     private readonly secretStorageService: SecretStorageService,
     private readonly snowflakeService: SnowflakeService,
-    private readonly databricksTreeProvider: DatabricksTreeProvider
+    private readonly databricksTreeProvider: DatabricksTreeProvider,
+    private readonly airflowTreeProvider: AirflowTreeProvider
   ) {
     this.connectionManager.onDidChangeConnections(() => this.refresh());
   }
 
   dispose(): void {
     this.databricksTreeProvider.dispose();
+    this.airflowTreeProvider.dispose();
     this.onDidChangeTreeDataEmitter.dispose();
   }
 
@@ -85,6 +93,7 @@ export class ConnectionsTreeDataProvider implements vscode.TreeDataProvider<Conn
     this.schemasCache.clear();
     this.tablesCache.clear();
     this.databricksTreeProvider.clearCaches();
+    this.airflowTreeProvider.clearCaches();
     this.onDidChangeTreeDataEmitter.fire(undefined);
   }
 
@@ -107,12 +116,26 @@ export class ConnectionsTreeDataProvider implements vscode.TreeDataProvider<Conn
         return Promise.resolve(this.databricksTreeProvider.getConnectionRoots(connection.id).map((node) => this.fromDatabricksNode(node)));
       }
 
+      if (connection.type === "airflow") {
+        return Promise.resolve(this.airflowTreeProvider.getConnectionRoots(connection.id).map((node) => this.fromAirflowNode(node)));
+      }
+
       return Promise.resolve([this.createDatabasesRootNode(connection.id)]);
     }
 
     if (this.isDatabricksNodeType(element.nodeType)) {
       return Promise.resolve(
-        this.databricksTreeProvider.getChildren(element.nodeType, element.payload).map((node) => this.fromDatabricksNode(node))
+        this.databricksTreeProvider
+          .getChildren(element.nodeType, element.payload as Partial<DatabricksNodePayload>)
+          .map((node) => this.fromDatabricksNode(node))
+      );
+    }
+
+    if (this.isAirflowNodeType(element.nodeType)) {
+      return Promise.resolve(
+        this.airflowTreeProvider
+          .getChildren(element.nodeType, element.payload as Partial<AirflowNodePayload>)
+          .map((node) => this.fromAirflowNode(node))
       );
     }
 
@@ -462,6 +485,21 @@ export class ConnectionsTreeDataProvider implements vscode.TreeDataProvider<Conn
       "databricksQueryHistoryRoot",
       "databricksQueryHistoryEntry"
     ].includes(nodeType);
+  }
+
+  private fromAirflowNode(node: import("./airflowTreeProvider").AirflowVirtualNode): ConnectionTreeItem {
+    const item = new ConnectionTreeItem(node.nodeType, node.label, node.collapsibleState, node.payload ?? {});
+    item.description = node.description;
+    item.contextValue = node.contextValue;
+    item.iconPath = node.iconName ? new vscode.ThemeIcon(node.iconName) : undefined;
+    item.command = node.command;
+    return item;
+  }
+
+  private isAirflowNodeType(nodeType: ConnectionNodeType): nodeType is AirflowNodeType {
+    return ["airflowDagsRoot", "airflowDag", "airflowDagRunsRoot", "airflowDagRun", "airflowDagTasksRoot", "airflowTask"].includes(
+      nodeType
+    );
   }
 
   private buildDatabasesKey(connectionId: string): string {
