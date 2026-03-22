@@ -40,22 +40,14 @@ export class AirflowTreeProvider implements vscode.Disposable {
   private readonly tasksCache = new Map<string, AirflowTaskInstanceInfo[]>();
   private readonly loadingKeys = new Set<string>();
   private readonly errorKeys = new Map<string, string>();
-  private readonly refreshTimer: NodeJS.Timeout;
 
   constructor(
     private readonly airflowService: AirflowService,
     private readonly resolveConnection: (connectionId: string) => Promise<Connection>,
     private readonly refreshCallback: () => void
-  ) {
-    this.refreshTimer = setInterval(() => {
-      this.clearCaches();
-      this.refreshCallback();
-    }, 12000);
-  }
+  ) {}
 
-  dispose(): void {
-    clearInterval(this.refreshTimer);
-  }
+  dispose(): void {}
 
   clearCaches(): void {
     this.dagsCache.clear();
@@ -97,7 +89,7 @@ export class AirflowTreeProvider implements vscode.Disposable {
               iconName: this.getStateIcon(dag.lastRunState ?? (dag.isPaused ? "PAUSED" : "ACTIVE")),
               collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
               payload: { connectionId, dagId: dag.dagId, dag },
-              contextValue: "dataops.airflowDag",
+              contextValue: /failed/i.test(dag.lastRunState ?? "") ? "dataops.airflowDag.failed" : "dataops.airflowDag",
               command: {
                 command: "dataops.showAirflowDagDetails",
                 title: "Show Airflow DAG Details",
@@ -143,7 +135,7 @@ export class AirflowTreeProvider implements vscode.Disposable {
               iconName: this.getStateIcon(run.state),
               collapsibleState: vscode.TreeItemCollapsibleState.None,
               payload: { connectionId, dagId: payload.dagId, runId: run.runId, run },
-              contextValue: "dataops.airflowDagRun"
+              contextValue: /failed/i.test(run.state) ? "dataops.airflowDagRun.failed" : "dataops.airflowDagRun"
             }))
         );
       case "airflowDagTasksRoot":

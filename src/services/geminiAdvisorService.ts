@@ -7,6 +7,10 @@ export type DatabricksAdvisorInput = {
   jobDurationMs?: number | null;
   queryExecutionTimeMs?: number | null;
   warehouseSize?: string;
+  appName?: string;
+  appState?: string;
+  appStatusMessage?: string;
+  failureReason?: string;
 };
 
 export type DatabricksAdvisorResult = {
@@ -29,11 +33,15 @@ export class GeminiAdvisorService {
       `* query execution time: ${input.queryExecutionTimeMs ?? "unknown"}`,
       `* workload type: ${input.workloadType}`,
       `* warehouse size: ${input.warehouseSize ?? "unknown"}`,
+      `* app name: ${input.appName ?? "unknown"}`,
+      `* app state: ${input.appState ?? "unknown"}`,
+      `* app status message: ${input.appStatusMessage ?? "unknown"}`,
+      `* failure reason: ${input.failureReason ?? "unknown"}`,
       "",
       "Provide:",
-      "1. Performance issues",
-      "2. Scaling recommendations",
-      "3. Cost optimization tips",
+      "1. Current status summary (running/stopped/failed and what it implies)",
+      "2. Problems or failure causes (if any)",
+      "3. Improvement recommendations",
       "",
       "Return JSON:",
       "{",

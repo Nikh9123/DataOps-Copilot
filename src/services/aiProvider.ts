@@ -64,6 +64,14 @@ export class AiProviderFactory {
   }
 }
 
+/** Called once from extension activate() with each VS Code workspace folder root. */
+export function loadEnvironmentFromWorkspace(workspacePath: string): void {
+  const envPath = path.join(workspacePath, ".env");
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath, override: false });
+  }
+}
+
 function loadEnvironmentVariables(): void {
   const candidates = [
     path.resolve(process.cwd(), ".env"),

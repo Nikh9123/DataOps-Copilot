@@ -36,6 +36,7 @@ type NodePayload = {
   database?: string;
   schema?: string;
   table?: string;
+  app?: DatabricksNodePayload["app"];
   cluster?: DatabricksNodePayload["cluster"];
   run?: DatabricksNodePayload["run"] | AirflowNodePayload["run"];
   warehouse?: DatabricksNodePayload["warehouse"];
@@ -470,6 +471,9 @@ export class ConnectionsTreeDataProvider implements vscode.TreeDataProvider<Conn
 
   private isDatabricksNodeType(nodeType: ConnectionNodeType): nodeType is DatabricksNodeType {
     return [
+      "databricksComputeRoot",
+      "databricksAppsRoot",
+      "databricksApp",
       "databricksClustersRoot",
       "databricksCatalogsRoot",
       "databricksCatalog",

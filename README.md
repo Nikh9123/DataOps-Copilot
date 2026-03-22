@@ -2,6 +2,8 @@
 
 > AI-powered DataOps Control Center for VS Code.
 
+![DataOps Copilot Logo](./assets/dataops.svg)
+
 ![Version](https://img.shields.io/badge/version-0.0.1-1f6feb)
 ![VS Code](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visualstudiocode&logoColor=white)
 ![Build](https://img.shields.io/badge/build-passing-2ea043)
@@ -69,9 +71,11 @@ Unlike standard platform-specific extensions, DataOps Copilot combines:
 
 ### Databricks Control Center
 
+- Compute view with `SQL Warehouses`, `Clusters`, and `Apps`.
 - Monitor clusters (state, workers, autoscale).
 - Monitor jobs and run outcomes.
 - Monitor SQL warehouses.
+- List Databricks Apps from workspace APIs.
 - Browse query history.
 - Explore Unity Catalog metadata (catalogs, schemas, tables).
 - Execute SQL statements with warehouse resolution.
@@ -84,12 +88,14 @@ Unlike standard platform-specific extensions, DataOps Copilot combines:
 - Task instance tracking (state, tries, duration).
 - Trigger DAG execution directly from tree/context.
 - DAG details panel with AI pipeline advisor.
-- Auto-refresh for near-real-time DAG health updates.
+- AI log analysis for DAG runs (error-focused when failures exist, summary-focused otherwise).
+- Manual refresh workflow for user-controlled updates.
 
 ### Multi-platform Explorer
 
 - One Connections view for Snowflake, Databricks, and Airflow.
 - Global refresh and platform-specific refresh actions.
+- User-controlled refresh flow (no forced Airflow auto-polling).
 - Active connection indicator in status bar.
 - Smooth command-palette driven workflows.
 
@@ -184,6 +190,7 @@ src/
   services/
     snowflakeService.ts
     databricksApiClient.ts
+    databricksAppsService.ts
     databricksSqlService.ts
     databricksClusterService.ts
     databricksJobsService.ts
@@ -319,8 +326,22 @@ DATAOPS_LARGE_TABLES=FACT_ORDERS,EVENTS,RAW_CLICKSTREAM
 ### Monitor Databricks Resources
 
 1. Expand Databricks connection in Connections view.
-2. Open Clusters, Jobs, Warehouses, Query History, Catalogs.
-3. Click resource nodes for detailed insight panels.
+2. Open `Compute` for SQL Warehouses, Clusters, and Apps.
+3. Open Jobs, Query History, and Catalogs.
+4. Click resource nodes for detailed insight panels.
+
+### Analyze Airflow DAG Logs with AI
+
+1. Expand Airflow connection and open a DAG or DAG run.
+2. Run `DataOps: Analyze DAG Failure with AI`.
+3. If errors exist, review root cause, task-level errors, suggested fixes, and next steps.
+4. If no errors, review concise run-log summary and validation steps.
+
+### Refresh Data Manually
+
+1. Use `DataOps: Refresh Connections` for full refresh.
+2. Use `DataOps: Refresh Databricks Services` for Databricks-only refresh.
+3. Use `DataOps: Refresh Airflow` for Airflow-only refresh.
 
 ### Trigger Airflow DAG
 
@@ -331,6 +352,12 @@ DATAOPS_LARGE_TABLES=FACT_ORDERS,EVENTS,RAW_CLICKSTREAM
 ---
 
 ## 🧠 AI Features Explained
+
+### Query Generator
+
+- Converts natural-language prompts into executable SQL.
+- Helps analysts move from intent to query faster.
+- Works with the active data platform context.
 
 ### Query Optimizer
 
@@ -345,7 +372,8 @@ DATAOPS_LARGE_TABLES=FACT_ORDERS,EVENTS,RAW_CLICKSTREAM
 
 ### Resource Advisor
 
-- Databricks advisor analyzes cluster/job/warehouse signals.
+- Databricks advisor analyzes cluster/job/warehouse/app signals.
+- Summarizes app health (running/stopped/failed) and possible failure reasons.
 - Returns concise issues and optimization recommendations.
 
 ### Pipeline Advisor
@@ -353,18 +381,90 @@ DATAOPS_LARGE_TABLES=FACT_ORDERS,EVENTS,RAW_CLICKSTREAM
 - Airflow advisor analyzes DAG schedule, runs, and task behavior.
 - Surfaces bottlenecks, reliability concerns, and practical next steps.
 
+### DAG Log Analyzer
+
+- Analyzes Airflow DAG task logs with AI.
+- If failures exist, returns root cause, task-level errors, fixes, and next steps.
+- If no failures exist, returns a concise execution summary and validation guidance.
+
 ---
 
 ## 📸 Screenshots
 
+### Connections Explorer
+
+Unified sidebar with Snowflake, Databricks, and Airflow connections, including Databricks compute grouping and Airflow DAG hierarchy.
+
 ![Connections Explorer](./assets/connections-explorer.png)
+
+### Query Optimizer
+
+AI SQL optimization report showing detected issues, recommended fixes, and an optimized replacement query.
+
 ![Query Optimizer](./assets/query-optimizer.png)
-![Databricks Details](./assets/databricks-details.png)
-![Airflow DAG Details](./assets/airflow-dag-details.png)
+
+### Query Cost Predictor
+
+Cost risk analysis panel with scan/cost level, issues, and execution suggestions before running SQL.
+
+![Query Cost Predictor](./assets/query-cost-predictor.png)
+
+### Query Cost Warning Dialog
+
+Pre-execution warning prompt that lets you review risks and choose whether to continue query execution.
+
+![Query Cost Warning](./assets/query-cost-warning.png)
+
+### Query Results
+
+Rich query result webview with metrics, AI warnings, and CSV export.
+
 ![Query Results](./assets/query-results.png)
 
+### Snowflake Table Preview
+
+Table preview experience for Snowflake objects with result grid and performance hints.
+
+![Snowflake Table Preview](./assets/snowflake_table_preview.png)
+
+### Databricks SQL and Catalog Experience
+
+Databricks browsing and SQL/table preview workflow from the unified explorer.
+
+![Databricks SQL](./assets/databricks-sql.png)
+
+### Databricks Warehouse Details with AI Insights
+
+Warehouse state/capacity details with AI-generated issues, suggestions, and recommendation.
+
+![Databricks Warehouse Details](./assets/databricks-warehouse-details.png)
+
+### Databricks Job AI Helper
+
+Job run details panel with AI-assisted troubleshooting and optimization guidance.
+
+![Databricks Job AI Helper](./assets/databricks-job-ai-helper.png)
+
+### Databricks App AI Summary
+
+App details panel with AI insights for app status (running/stopped/failed), possible failure reason, and practical improvement suggestions.
+
+![Databricks App AI Summary](./assets/databricks-app-ai.png)
+
+### Airflow DAG Details
+
+DAG overview page with run history and task status visibility for operational debugging.
+
+![Airflow DAG Details](./assets/airflow-dag-details.png)
+
+### Airflow DAG Tree View
+
+Expanded DAG/run/task hierarchy from the connections explorer for quick operational navigation.
+
+![Airflow DAGs](./assets/airflow-dags.png)
+
 > 📌 Note
-> Add actual screenshots to the `assets` folder using the same filenames for instant rendering on GitHub.
+> Screenshots are stored in the `assets` folder and referenced directly in this README.
 
 ---
 

@@ -99,11 +99,27 @@ export class AirflowService {
     }));
   }
 
+  async getTaskLog(connection: Connection, dagId: string, runId: string, taskId: string, tryNumber: number): Promise<string> {
+    const client = this.createClient(connection);
+    const tryNum = Math.max(1, tryNumber);
+    try {
+      const response = await client.get(
+        `/dags/${encodeURIComponent(dagId)}/dagRuns/${encodeURIComponent(runId)}/taskInstances/${encodeURIComponent(taskId)}/logs/${tryNum}`,
+        { params: { full_content: true } }
+      );
+      const data = response.data as Record<string, unknown> | string;
+      if (data && typeof data === "object" && typeof (data as Record<string, unknown>).content === "string") {
+        return (data as Record<string, unknown>).content as string;
+      }
+      return String(data ?? "");
+    } catch (err) {
+      return `[Log unavailable: ${AirflowService.getAirflowError(err)}]`;
+    }
+  }
+
   async triggerDAG(connection: Connection, dagId: string): Promise<AirflowDagRunInfo> {
     const client = this.createClient(connection);
-    const response = await client.post<Record<string, unknown>>(`/dags/${encodeURIComponent(dagId)}/dagRuns`, {
-      note: "Triggered from DataOps Copilot"
-    });
+    const response = await client.post<Record<string, unknown>>(`/dags/${encodeURIComponent(dagId)}/dagRuns`, {});
 
     return {
       runId: String(response.data.dag_run_id ?? "unknown"),

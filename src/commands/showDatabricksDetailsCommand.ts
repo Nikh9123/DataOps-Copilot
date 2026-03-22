@@ -2,12 +2,14 @@ import * as vscode from "vscode";
 import { ConnectionManager } from "../services/connectionManager";
 import { SecretStorageService } from "../services/secretStorageService";
 import { DatabricksClusterService } from "../services/databricksClusterService";
+import { DatabricksAppsService } from "../services/databricksAppsService";
 import { GeminiAdvisorService } from "../services/geminiAdvisorService";
 import { getConnectionWithCredentials } from "../utils/connectionCredentials";
 import { showDatabricksDetailsWebview } from "../utils/databricksDetailsWebview";
 
 type DatabricksDetailsInput = {
   connectionId?: string;
+  app?: import("../services/databricksAppsService").DatabricksAppInfo;
   cluster?: import("../services/databricksClusterService").DatabricksClusterInfo;
   run?: import("../services/databricksJobsService").DatabricksRunInfo;
   warehouse?: import("../services/databricksWarehouseService").DatabricksWarehouseInfo;
@@ -17,6 +19,7 @@ type DatabricksDetailsInput = {
 export function registerShowDatabricksDetailsCommand(
   connectionManager: ConnectionManager,
   secretStorageService: SecretStorageService,
+  databricksAppsService: DatabricksAppsService,
   databricksClusterService: DatabricksClusterService,
   geminiAdvisorService?: GeminiAdvisorService
 ): vscode.Disposable {
@@ -42,6 +45,30 @@ export function registerShowDatabricksDetailsCommand(
       async () => {
         try {
           const connection = await getConnectionWithCredentials(baseConnection, secretStorageService);
+
+          if (normalized.app) {
+            const details = await safeGetAppDetails(databricksAppsService, connection, normalized.app);
+            const advisor = await safeAnalyze(geminiAdvisorService, {
+              workloadType: "databricks app",
+              appName: details.name,
+              appState: details.state,
+              appStatusMessage: details.statusMessage,
+              failureReason: details.errorCode
+            });
+
+            showDatabricksDetailsWebview(
+              `App — ${details.name}`,
+              {
+                "App ID": details.id,
+                State: details.state,
+                URL: details.url ?? "not available",
+                "Status Message": details.statusMessage ?? "none",
+                "Error Code": details.errorCode ?? "none"
+              },
+              advisor
+            );
+            return;
+          }
 
           if (normalized.cluster) {
             const details = await databricksClusterService.getClusterDetails(connection, normalized.cluster.clusterId);
@@ -134,5 +161,17 @@ async function safeAnalyze(
     return await geminiAdvisorService.analyze(input);
   } catch {
     return undefined;
+  }
+}
+
+async function safeGetAppDetails(
+  databricksAppsService: DatabricksAppsService,
+  connection: import("../models/connection").Connection,
+  app: import("../services/databricksAppsService").DatabricksAppInfo
+): Promise<import("../services/databricksAppsService").DatabricksAppInfo> {
+  try {
+    return await databricksAppsService.getAppDetails(connection, app.id);
+  } catch {
+    return app;
   }
 }

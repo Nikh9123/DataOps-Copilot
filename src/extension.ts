@@ -7,6 +7,7 @@ import { registerPredictQueryCostCommand } from "./commands/predictQueryCostComm
 import { registerRemoveConnectionCommand } from "./commands/removeConnectionCommand";
 import { registerRunQueryCommand } from "./commands/runQueryCommand";
 import { registerShowAirflowDagDetailsCommand } from "./commands/showAirflowDagDetailsCommand";
+import { registerAnalyzeDagFailureCommand } from "./commands/analyzeDagFailureCommand";
 import { registerShowDatabricksDetailsCommand } from "./commands/showDatabricksDetailsCommand";
 import { registerSwitchConnectionCommand } from "./commands/switchConnectionCommand";
 import { registerTriggerDAGCommand } from "./commands/triggerDAGCommand";
@@ -21,11 +22,12 @@ import { ConnectionManager } from "./services/connectionManager";
 import { SecretStorageService } from "./services/secretStorageService";
 import { SnowflakeService } from "./services/snowflakeService";
 import { QueryHistoryService } from "./services/queryHistoryService";
-import { AiProviderFactory } from "./services/aiProvider";
+import { AiProviderFactory, loadEnvironmentFromWorkspace } from "./services/aiProvider";
 import { AiOptimizerService } from "./services/aiOptimizerService";
 import { AiQueryGeneratorService } from "./services/aiQueryGeneratorService";
 import { AiCostEstimatorService } from "./services/aiCostEstimatorService";
 import { DatabricksClusterService } from "./services/databricksClusterService";
+import { DatabricksAppsService } from "./services/databricksAppsService";
 import { DatabricksJobsService } from "./services/databricksJobsService";
 import { DatabricksWarehouseService } from "./services/databricksWarehouseService";
 import { DatabricksQueryHistoryService } from "./services/databricksQueryHistoryService";
@@ -39,6 +41,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const connectionManager = new ConnectionManager();
   const secretStorageService = new SecretStorageService(context.secrets, context.globalState);
   const snowflakeService = new SnowflakeService();
+  const databricksAppsService = new DatabricksAppsService();
   const databricksClusterService = new DatabricksClusterService();
   const databricksJobsService = new DatabricksJobsService();
   const databricksWarehouseService = new DatabricksWarehouseService();
@@ -48,6 +51,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const airflowService = new AirflowService();
   const queryHistoryService = new QueryHistoryService(context.globalState);
   const queryCostAnalyzer = new QueryCostAnalyzer();
+
+  // Load .env from every VS Code workspace folder so the AI provider can be
+  // initialised correctly when the extension is installed as a VSIX.
+  for (const folder of vscode.workspace.workspaceFolders ?? []) {
+    loadEnvironmentFromWorkspace(folder.uri.fsPath);
+  }
 
   let aiOptimizerService: AiOptimizerService | undefined;
   let aiQueryGeneratorService: AiQueryGeneratorService | undefined;
@@ -72,6 +81,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   statusBarItem.tooltip = "Switch active DataOps connection";
 
   const databricksTreeProvider = new DatabricksTreeProvider(
+    databricksAppsService,
     databricksClusterService,
     databricksJobsService,
     databricksWarehouseService,
@@ -215,10 +225,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerShowDatabricksDetailsCommand(
       connectionManager,
       secretStorageService,
+      databricksAppsService,
       databricksClusterService,
       geminiAdvisorService
     ),
     registerShowAirflowDagDetailsCommand(
+      connectionManager,
+      secretStorageService,
+      airflowService,
+      geminiAirflowAdvisorService
+    ),
+    registerAnalyzeDagFailureCommand(
       connectionManager,
       secretStorageService,
       airflowService,

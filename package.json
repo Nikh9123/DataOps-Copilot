@@ -22,6 +22,7 @@
     "onCommand:dataops.showDatabricksDetails",
     "onCommand:dataops.showAirflowDagDetails",
     "onCommand:dataops.triggerDAG",
+    "onCommand:dataops.analyzeDagFailure",
     "onCommand:dataops.refreshDatabricksServices",
     "onCommand:dataops.refreshAirflow",
     "onCommand:dataops.previewTable",
@@ -83,6 +84,12 @@
         "command": "dataops.triggerDAG",
         "title": "DataOps: Trigger DAG",
         "category": "DataOps"
+      },
+      {
+        "command": "dataops.analyzeDagFailure",
+        "title": "DataOps: Analyze DAG Failure with AI",
+        "category": "DataOps",
+        "icon": "$(sparkle)"
       },
       {
         "command": "dataops.refreshDatabricksServices",
@@ -230,6 +237,21 @@
           "command": "dataops.triggerDAG",
           "when": "view == dataops.connectionsView && viewItem == dataops.airflowDag",
           "group": "inline@2"
+        },
+        {
+          "command": "dataops.analyzeDagFailure",
+          "when": "view == dataops.connectionsView && viewItem == dataops.airflowDag.failed",
+          "group": "inline@1"
+        },
+        {
+          "command": "dataops.triggerDAG",
+          "when": "view == dataops.connectionsView && viewItem == dataops.airflowDag.failed",
+          "group": "inline@2"
+        },
+        {
+          "command": "dataops.analyzeDagFailure",
+          "when": "view == dataops.connectionsView && viewItem == dataops.airflowDagRun.failed",
+          "group": "inline@1"
         }
       ]
     },

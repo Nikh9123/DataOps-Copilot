@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Connection } from "../models/connection";
 import { DatabricksClusterInfo } from "../services/databricksClusterService";
+import { DatabricksAppInfo, DatabricksAppsService } from "../services/databricksAppsService";
 import { DatabricksJobsService, DatabricksRunInfo } from "../services/databricksJobsService";
 import { DatabricksWarehouseInfo } from "../services/databricksWarehouseService";
 import { DatabricksQueryHistoryEntry } from "../services/databricksQueryHistoryService";
@@ -10,6 +11,9 @@ import { DatabricksQueryHistoryService } from "../services/databricksQueryHistor
 import { DatabricksMetadataService, DatabricksCatalogInfo, DatabricksSchemaInfo, DatabricksTableInfo } from "../services/databricksMetadataService";
 
 export type DatabricksNodeType =
+  | "databricksComputeRoot"
+  | "databricksAppsRoot"
+  | "databricksApp"
   | "databricksCatalogsRoot"
   | "databricksCatalog"
   | "databricksSchemasRoot"
@@ -30,6 +34,7 @@ export type DatabricksNodePayload = {
   catalog?: string;
   schema?: string;
   table?: string;
+  app?: DatabricksAppInfo;
   cluster?: DatabricksClusterInfo;
   run?: DatabricksRunInfo;
   warehouse?: DatabricksWarehouseInfo;
@@ -52,6 +57,7 @@ export type DatabricksVirtualNode = {
 };
 
 export class DatabricksTreeProvider implements vscode.Disposable {
+  private readonly appsCache = new Map<string, DatabricksAppInfo[]>();
   private readonly clustersCache = new Map<string, DatabricksClusterInfo[]>();
   private readonly jobsCache = new Map<string, DatabricksRunInfo[]>();
   private readonly warehousesCache = new Map<string, DatabricksWarehouseInfo[]>();
@@ -63,6 +69,7 @@ export class DatabricksTreeProvider implements vscode.Disposable {
   private readonly errorKeys = new Map<string, string>();
 
   constructor(
+    private readonly appsService: DatabricksAppsService,
     private readonly clusterService: DatabricksClusterService,
     private readonly jobsService: DatabricksJobsService,
     private readonly warehouseService: DatabricksWarehouseService,
@@ -77,6 +84,7 @@ export class DatabricksTreeProvider implements vscode.Disposable {
   }
 
   clearCaches(): void {
+    this.appsCache.clear();
     this.clustersCache.clear();
     this.jobsCache.clear();
     this.warehousesCache.clear();
@@ -90,10 +98,9 @@ export class DatabricksTreeProvider implements vscode.Disposable {
 
   getConnectionRoots(connectionId: string): DatabricksVirtualNode[] {
     return [
+      this.createRootNode("databricksComputeRoot", "Compute", connectionId, "server-environment"),
       this.createRootNode("databricksCatalogsRoot", "Catalogs", connectionId, "folder-library"),
-      this.createRootNode("databricksClustersRoot", "Clusters", connectionId, "server-process"),
       this.createRootNode("databricksJobsRoot", "Jobs", connectionId, "run"),
-      this.createRootNode("databricksWarehousesRoot", "Warehouses", connectionId, "database"),
       this.createRootNode("databricksQueryHistoryRoot", "Query History", connectionId, "history")
     ];
   }
@@ -105,6 +112,53 @@ export class DatabricksTreeProvider implements vscode.Disposable {
     }
 
     switch (nodeType) {
+      case "databricksComputeRoot":
+        return [
+          {
+            nodeType: "databricksWarehousesRoot",
+            label: "SQL Warehouses",
+            iconName: "database",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            payload: { connectionId }
+          },
+          {
+            nodeType: "databricksClustersRoot",
+            label: "Clusters",
+            iconName: "server-process",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            payload: { connectionId }
+          },
+          {
+            nodeType: "databricksAppsRoot",
+            label: "Apps",
+            iconName: "package",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            payload: { connectionId }
+          }
+        ];
+      case "databricksAppsRoot":
+        return this.getSectionChildren(
+          `apps::${connectionId}`,
+          this.appsCache.get(connectionId),
+          () => this.loadApps(connectionId),
+          (apps) =>
+            apps.map((app) => ({
+              nodeType: "databricksApp",
+              label: app.name,
+              description: app.state,
+              iconName: this.getStateIcon(app.state),
+              collapsibleState: vscode.TreeItemCollapsibleState.None,
+              payload: { connectionId, app },
+              contextValue: "dataops.databricksApp",
+              command: {
+                command: "dataops.showDatabricksDetails",
+                title: "Show Databricks App Details",
+                arguments: [{ connectionId, app }]
+              }
+            }))
+        );
+      case "databricksApp":
+        return [];
       case "databricksCatalogsRoot":
         return this.getSectionChildren(
           `catalogs::${connectionId}`,
@@ -308,6 +362,13 @@ export class DatabricksTreeProvider implements vscode.Disposable {
     await this.load(`clusters::${connectionId}`, async () => {
       const connection = await this.resolveConnection(connectionId);
       this.clustersCache.set(connectionId, await this.clusterService.listClusters(connection));
+    });
+  }
+
+  private async loadApps(connectionId: string): Promise<void> {
+    await this.load(`apps::${connectionId}`, async () => {
+      const connection = await this.resolveConnection(connectionId);
+      this.appsCache.set(connectionId, await this.appsService.listApps(connection));
     });
   }
 
